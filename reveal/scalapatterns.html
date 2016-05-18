@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>reveal.js – The HTML Presentation Framework</title>
+
+    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="author" content="Hakim El Hattab">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+        <section>
+            <h1>Scala design patterns</h1>
+
+            <h3>From Li Haoyi's blogpost: Principle of least power</h3>
+        </section>
+
+        <section>
+            <section>
+                <h1>Principle of least power</h1>
+
+                <p>
+                <ul>
+                    <li>Complexity</li>
+                    <li>Fear of refactoring</li>
+                    <li>Overengineering</li>
+                </ul>
+                </p>
+            </section>
+            <section>
+                <h2>Complexity</h2>
+
+                <p>
+                <ul>
+                    <li>Complexity vs easy to read</li>
+                    <li>No fear of refactoring</li>
+                    <li>Don't overengineer</li>
+                </ul>
+                </p>
+            </section>
+            <section>
+                <h2>No fear of refactoring</h2>
+
+                <p>
+                <ul>
+                    <li>Scala is strongly typed</li>
+                    <li>Refactoring is simpler</li>
+                    <li>Dynamic languages such as Python: breaking things, many tests</li>
+                    <li>Java: casting and reflection pitfall</li>
+                </ul>
+                </p>
+            </section>
+            <section>
+                <h2>Don't overengineer</h2>
+
+                <p>
+                <ul>
+                    <li>Passing method instead of object</li>
+                    <li>Limit reuse</li>
+                </ul>
+                </p>
+            </section>
+            <section>
+                <h2>Scala's strengths and weaknesses</h2>
+
+                <p>
+                <ul>
+                    <li>Strength: refactoring is easy because of the type system</li>
+                    <li>Weakness: readability</li>
+                </ul>
+                </p>
+            </section>
+        </section>
+        <section>
+            <section>
+                <h1>Immutability</h1>
+
+                <p>
+                <ul>
+                    <li>Immutability By Default</li>
+                    <li>Mutability For Mutable Things</li>
+                    <li>Mutability For Perf</li>
+                    <li>Limit the Scope of Mutability</li>
+                    <li>No Double-Mutability</li>
+                    <li>Event-Sourcing/CQRS</li>
+                </ul>
+                </p>
+            </section>
+            <section>
+                <h2>Immutability By Default</h2>
+
+                <p>
+                    Ok
+                <pre><code data-trim>
+val x = if(myBoolean) expr1 else expr
+                </code></pre>
+                </p>
+                <p>
+                    Not ok
+                <pre><code data-trim>
+var x: ExprType = null
+if(myBoolean) x = expr1 else x = expr
+                </code></pre>
+                </p>
+            </section>
+            <section>
+                <h2>Mutability For Mutable Things</h2>
+
+                <p>
+                    Ok
+                <pre><code data-trim>
+class Player(var health: Int = 100, val items: mutable.Buffer[Item] = mutable.Buffer.empty)
+                </code></pre>
+                Not ok
+                <pre><code data-trim>
+class Player(var health: Int = 100, var items: mutable.Buffer[Item] = null)
+val player = new Player()
+player.items = mutable.Buffer.empty[Items]
+                </code></pre>
+                </p>
+            </section>
+            <section>
+                <h2>Mutability For Perf</h2>
+
+                <p>
+                    Ok
+                <pre><code data-trim>
+val fibs = mutable.Buffer(1, 1)
+while(fibs.length < 100){
+  fibs.append(fibs(fibs.length-1) + fibs(fibs.length-2))
+}
+                </code></pre>
+                </p>
+            </section>
+            <section>
+                <h2>Limit the Scope of Mutability</h2>
+
+                <p>
+                    Better
+                <pre><code data-trim>
+def getFibs(n: Int): Seq[Int] = {
+  val fibs = mutable.Buffer(1, 1)
+  while(fibs.length < n){
+    fibs.append(fibs(fibs.length-1) + fibs(fibs.length-2)
+  }
+  fibs
+}
+                </code></pre>
+                Than
+                <pre><code data-trim>
+def getFibs(n: Int, fibs: mutable.Buffer[Int]): Unit = {
+  fibs.clear()
+  fibs.append(1)
+  fibs.append(1)
+  while(fibs.length < n){
+    fibs.append(fibs(fibs.length-1) + fibs(fibs.length-2))
+  }
+}
+                </code></pre>
+                </p>
+            </section>
+            <section>
+                <h2>No Double-Mutability</h2>
+
+                <p>
+                Not ok
+                <pre><code data-trim>
+var myList = mutable.Buffer[Int]
+                </code></pre>
+                Ok
+                <pre><code data-trim>
+val myList = mutable.Buffer[Int]
+                </code></pre>
+                Also ok
+                <pre><code data-trim>
+var myList = Vector[Int]
+                </code></pre>
+                </p>
+            </section>
+            <section>
+                <h2>Event-Sourcing/CQRS</h2>
+
+                <p>
+                <ul>
+                    <li>Database, where the transaction logs allow "streaming" replication, and isolation between
+                        transactions.
+                    </li>
+                    <li>Video-games, where storing the input-log allows you to re-play everything that happened during a
+                        session e.g. for future viewing
+                    </li>
+                </ul>
+                </p>
+                <p>
+                    If you want the benefits that these techniques bring: re-playability, isolation, streaming
+                    replication, then by all means use these techniques.
+                </p>
+
+                <p>
+                    In general, though, it is probably an over-kill for most use cases and should not be used by default
+                    unless you know you want those benefits.
+                </p>
+            </section>
+        </section>
+
+    </div>
+
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.js"></script>
+
+<script>
+
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+            {
+                src: 'lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+                src: 'plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'plugin/highlight/highlight.js', async: true, callback: function () {
+                hljs.initHighlightingOnLoad();
+            }
+            },
+            {src: 'plugin/zoom-js/zoom.js', async: true},
+            {src: 'plugin/notes/notes.js', async: true}
+        ]
+    });
+
+</script>
+
+</body>
+</html>
