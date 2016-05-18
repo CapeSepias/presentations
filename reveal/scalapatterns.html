@@ -233,7 +233,82 @@ var myList = Vector[Int]
                 </p>
             </section>
         </section>
+        <section>
+            <section>
+                <h1>Published Interfaces</h1>
 
+                <p>
+                <ol>
+                    <li>Static Methods Only</li>
+                    <li>Instantiating Custom Types</li>
+                    <li>Inheriting From Classes</li>
+                </ol>
+                </p>
+            </section>
+            <section>
+                <h2>Static Methods Only</h2>
+
+                <p>
+                <pre><code data-trim>
+object TheirCode{
+  /**
+   * Takes a set of `T`s and a function which defines what other `T`s`
+   * can be reached from the outgoing edges from each `T``
+   *
+   * Returns the set of strongly connected components (each component
+   * being a Set[T])
+   *
+   * O(N + E) in the number of nodes N and total number of edges E
+   */
+  def stronglyConnectedComponents[T](nodes: Set[T],
+                                     edges: T => Set[T]): Set[Set[T]] = {
+    ... 500 lines of crazy code ...
+  }
+}
+
+object MyCode{
+  import TheirCode._
+  stronglyConnectedComponents(..., ...)
+}
+                </code></pre>
+                </p>
+            </section>
+            <section>
+                <h2>Instantiating Custom Types</h2>
+
+                <p>
+                <pre><code data-trim>
+object TheirCode{
+  trait Frag{
+    def render: String
+  }
+  // HTML constructors
+  def div(children: Frag*): Frag
+  def p(children: Frag*): Frag
+  def h1(children: Frag*): Frag
+  ...
+  implicit def stringFrag(s: String): Frag
+}
+
+object MyCode{
+  import TheirCode._
+  val frag = div(
+    h1("Hello World"),
+    p("I am a paragraph")
+  )
+  frag.render // <div><h1>Hello World</h1><p>I am a paragraph</p></div>
+}
+                </code></pre>
+                </p>
+            </section>
+                <section>
+                <h2>Inheriting from classes</h2>
+
+                <p>
+                    if you have a choice between exposing a few static functions, exposing some classes/types the developer will have to work with, and forcing the developer to inherit from your classes/traits, inheritence should be last on the list of options and only used as a last resort.
+                </p>
+            </section>
+        </section>
     </div>
 
 </div>
