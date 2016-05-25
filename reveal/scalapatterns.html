@@ -322,6 +322,421 @@ object MyCode{
         </ol>
         </p>
     </section>
+    <section>
+        <section>
+            <h1>Dependency injection</h1>
+
+            <p>
+            <ul>
+            <li>Abstract Members</li>
+            <li>Constructor Injection</li>
+            <li>"Dynamic Variables" aka Global Mutable State</li>
+            <li>Hardcode It</li>
+            <li>Implicit Method Parameter</li>
+            <li>Method Parameter</li>
+                <li>Setter Injection</li>
+            </ul>
+            </p>
+        </section>
+        <section>
+        <h1>Dependency injection</h1>
+
+        <p>
+        <ol>
+            <li>Hardcode It</li>
+            <li>Method Parameter</li>
+            <li>Constructor Injection</li>
+            <li>Abstract Members</li>
+        <li>Implicit Method Parameter</li>
+        <li>"Dynamic Variables" aka Global Mutable State</li>
+        <li>Setter Injection</li>
+        </ol>
+        </p>
+        </section>
+        <section>
+            <h2>Hardcode It</h2>
+
+            <p>
+            The dependency is log.info and println here:
+                <pre><code data-trim>
+def sayHello(msg: String) = println("Hello World: " + msg)
+
+sayHello("Mooo")
+                </code></pre>
+                <pre><code data-trim>
+def sayHello(msg: String) = log.info("Hello World: " + msg)
+
+sayHello("Mooo")
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Method Parameter</h2>
+
+            <p>
+                <pre><code data-trim>
+def sayHello(msg: String, log: String => Unit)
+  = log("Hello World: " + msg)
+
+sayHello("Mooo", System.out.println)
+sayHello("ErrorMooo", System.err.println)
+sayHello("LoggerMooo", log.info)
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Constructor injection 1</h2>
+
+            <p>
+                <pre><code data-trim>
+def func(log: String => Unit) = ... func2(log) ...
+def func2(log: String => Unit) = ... func3(log) ...
+...
+def func9(log: String => Unit) = ... sayHello("Moo", log) ...
+
+def sayHello(msg: String, log: String => Unit)
+  = log("Hello World: " + msg)
+
+func(System.out.println)
+func(System.err.println)
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Constructor injection 2</h2>
+
+            <p>
+                <pre><code data-trim>
+class Container(log: String => Unit){
+  def func() = ... func2() ...
+  def func2() = ... func3() ...
+  ...
+  def func9() = ... sayHello("Moo") ...
+
+  def sayHello(msg: String) = log("Hello World: " + msg)
+}
+
+new Container(System.out.println).func()
+new Container(System.err.println).func()
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Constructor injection 3</h2>
+
+            <p>
+                <pre><code data-trim>
+def func(log: String => Unit) = ... func2(log) ...
+def func2(log: String => Unit) = ... sayHello("Moo", log) ...
+
+def sayHello(msg: String, log: String => Unit)
+  = log("Hello World: " + msg)
+
+func(System.out.println)
+                </code></pre>
+            </p>
+            <p>
+                <pre><code data-trim>
+class Container(log: String => Unit){
+  def func() = ... func2() ...
+  def func2() = ... sayHello("Moo") ...
+
+  def sayHello(msg: String) = log("Hello World: " + msg)
+}
+
+new Container(System.out.println).func()
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Abstract Members</h2>
+
+            <p>
+                <pre><code data-trim>
+// Foo.scala
+trait Foo{
+  def log: String => Unit
+  def func() = ... func2(log) ...
+  ...
+}
+
+// Bar.scala
+trait Bar extends Foo{
+  def log: String => Unit
+  def func4() = ... func5(log) ...
+  ...
+}
+
+// Baz.scala
+trait Baz extends Bar{
+  def log: String => Unit
+  def func9() = ... sayHello("Moo", log) ...
+  def sayHello(msg: String) = log("Hello World: " + msg)
+}
+
+// Main.scala
+class Container(val log: String => Unit)
+  extends Foo with Bar with Baz
+new Container(System.out.println).func()
+new Container(System.err.println).func()
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Implicit Method Parameter 1</h2>
+
+            <p>
+                <pre><code data-trim>
+def sayHello(msg: String, log: String => Unit)
+  = log("Hello World: " + msg)
+
+sayHello("Mooo", System.out.println)
+sayHello("Mooo2", System.out.println)
+sayHello("Mooo3", System.out.println)
+sayHello("Mooo4", System.out.println)
+sayHello("Mooo5", System.out.println)
+sayHello("Mooo6", System.out.println)
+sayHello("Mooo7", System.out.println)
+sayHello("Mooo8", System.out.println)
+sayHello("Mooo9", System.out.println)
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Implicit Method Parameter 2</h2>
+
+            <p>
+                <pre><code data-trim>
+def sayHello(msg: String)(implicit log: String => Unit)
+  = log("Hello World: " + msg)
+
+implicit val logger: String => Unit = System.out.println
+sayHello("Mooo")
+sayHello("Mooo2")
+sayHello("Mooo3")
+sayHello("Mooo4")
+sayHello("Mooo5")
+sayHello("Mooo6")
+sayHello("Mooo7")
+sayHello("Mooo8")
+sayHello("Mooo9")
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>"Dynamic Variables" aka Global Mutable State 1</h2>
+
+            <p>
+                <pre><code data-trim>
+var log: String => Unit = null
+def func() = ... func2(log) ...
+def func2() = ... func3(log) ...
+...
+def func8() = ... func9(log) ...
+def func9() = ... sayHello("Moo", log) ...
+
+def sayHello(msg: String)
+  = log("Hello World: " + msg)
+
+log = System.out.println
+func() // Logs to stdout
+log = System.err.println
+func() // Logs to stderr
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>"Dynamic Variables" aka Global Mutable State 2</h2>
+
+            <p>
+                <pre><code data-trim>
+var log: String => Unit = null
+def func() = ... func2(log) ...
+def func2() = ... func3(log) ...
+...
+def func8() = ... func9(log) ...
+def func9() = ... sayHello("Moo", log) ...
+
+def sayHello(msg: String) = log("Hello World: " + msg)
+
+func() // KA-BOOM
+log = System.out.println
+func() // Logs to stdout
+log = System.err.println
+func() // Logs to stderr
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Setter Injection</h2>
+
+            <p>
+                Don't do this
+            </p>
+        </section>
+    </section>
+    <section>
+        <section>
+            <h1>Data Types</h1>
+
+            <p>
+            <ul>
+                <li>Ad-hoc Classes</li>
+                <li>Built-ins</li>
+                <li>Functions</li>
+                <li>Sealed Traits</li>
+                <li>Simple Case Classes</li>
+            </ul>
+            </p>
+        </section>
+        <section>
+            <h1>Data Types</h1>
+
+            <p>
+            <ol>
+                <li>Built-ins</li>
+                <li>Functions</li>
+                <li>Simple Case Classes</li>
+                <li>Sealed Traits</li>
+                <li>Ad-hoc Classes</li>
+            </ol>
+            </p>
+        </section>
+        <section>
+            <h2>Built-ins 1</h2>
+
+            <p>
+                This works, but...
+                <pre><code data-trim>
+class Foo(val x: Int, val s: String, val d: Double){
+  ... more things ...
+}
+
+def handle(foo: Foo) = {
+  ... foo.x ... // Only one usage of foo
+}
+
+val foo = new Foo(123, "hellol", 1.23)
+
+handle(foo)
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Built-ins 2</h2>
+
+            <p>
+                This is better
+                <pre><code data-trim>
+class Foo(val x: Int, val s: String, val d: Double)
+
+def handle(x: Int) = {
+  ... x ... // Only one usage of x
+}
+
+val foo = new Foo(123, "hellol", 1.23)
+
+handle(foo.x)
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Functions 1</h2>
+
+            <p>
+                This works, but...
+                <pre><code data-trim>
+class Exponentiator(val x: Int){
+   ... some methods ...
+  def exponentiate(d: Double): Double = math.pow(d, x)
+   ... more methods ...
+}
+
+def handle(exp: Exponentiator) = {
+  val myDouble = ...
+  ... exp.exponentiate(myDouble) ... // Only one usage of exp
+}
+
+val myExp = new Exponentiator(2)
+
+handle(myExp)
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Functions 2</h2>
+
+            <p>
+                This is better
+                <pre><code data-trim>
+class Exponentiator(val x: Int){
+   ... some methods ...
+  def exponentiate(d: Double): Double = math.pow(d, x)
+   ... more methods ...
+}
+
+def handle(op: Double => Double) = {
+  val myDouble = ...
+  ... op(myDouble) ... // Only one usage of op
+}
+
+val exp = new Exponentiator(2)
+
+handle(exp.exponentiate)
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Simple Case Classes 1</h2>
+
+            <p>
+                This works, but...
+                <pre><code data-trim>
+class Foo(_x: Int, _y: Int){
+  def x = _x
+  def y = _y
+  def hypotenus = math.sqrt(x * x + y * y)
+  override def hashCode = x + y // ad-hoc custom hash function
+  override def equals(other: Any) = other match{
+    case f: Foo => f.x == x && f.y == y
+    case _ => false
+  }
+}
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Simple Case Classes 2</h2>
+
+            <p>
+                This is better
+                <pre><code data-trim>
+case class Foo(x: Int, y: Int){
+  def hypotenus = math.sqrt(x * x + y * y)
+}
+                </code></pre>
+            </p>
+        </section>
+        <section>
+            <h2>Sealed Traits</h2>
+
+            <p>
+                Dumb constructs
+            </p>
+        </section>
+        <section>
+            <h2>Ad-hoc Classes</h2>
+
+            <p>
+                you lose concrete features that simpler data-types provide:
+                <ul>
+            <li>serializability</li>
+            <li>equality, hashcode, toString</li>
+            <li>pattern matching</li>
+        </ul>
+            </p>
+        </section>
+    </section>
     </div>
 
 </div>
